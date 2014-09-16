@@ -1,23 +1,18 @@
 import MySQLdb as mdb
-import db_functions
-import numpy as np
+#from geopy.geocoders import Nominatim
+from helpers import geocode
 
-con=mdb.connect(host="mysql.server",user="JoergFritz", \
+db=mdb.connect(host="mysql.server",user="JoergFritz", \
             db="JoergFritz$runRoutesTest",passwd="you-wish")
-cursor = con.cursor(mdb.cursors.DictCursor)
+cursor=db.cursor()
 
-cursor.execute("SELECT MapMyRunId FROM Tracks ORDER BY RAND() LIMIT 3;")
-query_results=cursor.fetchall()
-bestFitId=np.zeros(3)
-n=0
-for result in query_results:
-    bestFitId[n]=result['MapMyRunId']
-    n=n+1
+address='260 Sheridan Ave, Palo Alto'
 
-print bestFitId
+#geolocator = Nominatim()
+#location = geolocator.geocode("175 5th Avenue NYC")
+#g = geocoders.Google('AIzaSyBb2jxg7xdMbtQdJNCMgrtrOO6hbb6niEI')
+#place, (lat, lng) = g.geocode(address)
+lat,lng,full_add,data = geocode(address)
 
-path1String=["SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=",str(bestFitId[0])," ORDER BY Id;"]
-
-print ''.join(path1String)
-
+print(lat, lng)
 

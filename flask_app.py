@@ -10,6 +10,7 @@ import jinja2
 
 # User defined functions
 from forms import LoginForm
+from helpers import geocode
 import db_functions
 import scoring_functions
 
@@ -20,24 +21,23 @@ app.config.from_object('config')
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        address = form.address.data.split(',')[0]
-        distance = form.distance.data.split(',')[0]
+        address = form.address.data
+        distance = form.distance.data
         runFeatures = [1,2,3]
-        sep = '-'
-        #runFeaturesString = sep.join(runFeatures)
         print address, distance
-        return redirect(url_for('results',address=address,distance=distance,runFeatures=runFeatures))
+        lat,lng,full_add,data = geocode(address)
+        return redirect(url_for('results',lat=lat,lng=lng,distance=distance,runFeatures=runFeatures))
     return render_template('login.html', title = 'Run recommender', form = form)
 
 @app.route('/slideshow')
 def slideshow():
     return render_template('slideshow.html')
 
-@app.route('/results/<address>_<distance>_<runFeatures>')
-def results(address,distance,runFeatures):
+@app.route('/results/<lat>_<lng>_<distance>_<runFeatures>')
+def results(lat,lng,distance,runFeatures):
 # Map missing zip codes
-    zip1_orig = address
-    zip2_orig = distance
+    #zip1_orig = address
+    #zip2_orig = distance
     # Get data from database
     db=mdb.connect(host="mysql.server",user="JoergFritz", \
             db="JoergFritz$runRoutesTest",passwd="you-wish")
