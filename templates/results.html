@@ -104,6 +104,19 @@
 		}
 		map = new google.maps.Map(document.getElementById("map-canvas"),mapOptions);
 
+		var layer = new google.maps.FusionTablesLayer({
+            query: {
+                select: 'Location',
+                from: '1vnV4OEZSlfITnziE2ClpTU5-RuVjj7KO273IDinY'
+                },
+            heatmap: {
+                enabled: true
+            }
+        });
+
+  layer.setMap(map);
+
+
 		 var testCoordinates = [
             new google.maps.LatLng({{zip1_lat}}, {{zip1_lng}}),
             new google.maps.LatLng({{zip2_lat}}, {{zip2_lng}}),

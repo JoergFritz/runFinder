@@ -12,6 +12,17 @@ def score_zips(crime_z,walk_z,school_z,housing_z,commute1_z,commute2_z):
 		i += 1
 	return zip_scores
 
+def routescore(ascent_z,circularity_z,nature_z,proximity_z):
+	score = {}
+	route_scores = {}
+	for route in ascent_z.keys():
+		score[route] = ascent_z[route]+circularity_z[route]+nature_z[route]+proximity_z[route]
+	i = 0
+	for tuple in sorted(score.items(), key=lambda x:x[1], reverse = True):
+		route_scores[i] = tuple
+		i += 1
+	return route_scores
+
 def zscore(dict):
 	zscores = {}
 	scores_post = {}
@@ -27,7 +38,7 @@ def zscore(dict):
 		zscore_final = (dict[zip] - mean_fix)/std_fix
 		zscores[zip] = zscore_final
 	return zscores
-    
+
 def percentile_score(score):
 	score_pcntl = {}
 	score_array = []
@@ -38,7 +49,7 @@ def percentile_score(score):
 		pcntl = scipy.stats.percentileofscore(score_array,b)/100
 		score_pcntl[zip] = pcntl
 	return score_pcntl
-    
+
 def percentile_low(feat):
 	score_pcntl = {}
 	for zip in feat.keys():
@@ -50,7 +61,7 @@ def percentile_low(feat):
 		if pcntl <= 0.33:
 			score_pcntl[zip] = 'high'
 	return score_pcntl
-      
+
 def percentile_high(feat):
 	score_pcntl = {}
 	for zip in feat.keys():
@@ -61,14 +72,14 @@ def percentile_high(feat):
 			score_pcntl[zip] = 'medium'
 		if pcntl <= 0.33:
 			score_pcntl[zip] = 'low'
-	return score_pcntl    
-    
+	return score_pcntl
+
 def calc_safety(crime):
 	safety = {}
 	for zip in crime.keys():
 		safety[zip] = 11-crime[zip];
 	return safety
-    
+
 def calc_ave_lnglat(zip,coords):
 	coords_first = coords[0]
 	long = []
