@@ -12,11 +12,11 @@ def score_zips(crime_z,walk_z,school_z,housing_z,commute1_z,commute2_z):
 		i += 1
 	return zip_scores
 
-def routescore(ascent_z,circularity_z,nature_z,proximity_z):
+def routescore(ascent_z,circularity_z,nature_z,proximity_z,ascent_w,circularity_w,nature_w,proximity_w):
 	score = {}
 	route_scores = {}
 	for route in ascent_z.keys():
-		score[route] = ascent_z[route]+circularity_z[route]+nature_z[route]+proximity_z[route]
+		score[route] = ascent_w*ascent_z[route]-circularity_w*circularity_z[route]+nature_w*nature_z[route]-proximity_w*proximity_z[route]
 	i = 0
 	for tuple in sorted(score.items(), key=lambda x:x[1], reverse = True):
 		route_scores[i] = tuple
@@ -36,6 +36,10 @@ def zscore(dict):
 	std_fix = numpy.std(scores_post.values())
 	for zip in dict.keys():
 		zscore_final = (dict[zip] - mean_fix)/std_fix
+		if zscore_final>3:
+		    zscore_final=3
+		if zscore_final<-3:
+		    zscore_final=-3
 		zscores[zip] = zscore_final
 	return zscores
 

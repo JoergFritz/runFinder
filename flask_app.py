@@ -11,7 +11,7 @@ from haversine import haversine
 
 # User defined functions
 from forms import LoginForm
-from helpers import geocode
+from helpers import geocode, timewith
 import db_functions
 import scoring_functions
 
@@ -24,18 +24,18 @@ def login():
     if form.validate_on_submit():
         address = form.address.data
         distance = form.distance.data
-        runFeatures = [1,2,3]
+        weights = [1,1,1,1,1,1]
         print address, distance
         lat,lng,full_add,data = geocode(address)
-        return redirect(url_for('results',lat=lat,lng=lng,distance=distance))
+        return redirect(url_for('results',lat=lat,lng=lng,distance=distance,weights=weights))
     return render_template('login.html', title = 'Run recommender', form = form)
 
 @app.route('/slideshow')
 def slideshow():
     return render_template('slideshow.html')
 
-@app.route('/results/<lat>_<lng>_<distance>')
-def results(lat,lng,distance):
+@app.route('/results/<lat>_<lng>_<distance>_<weights>')
+def results(lat,lng,distance,weights):
     # Map missing zip codes
     #zip1_orig = address
     #zip2_orig = distance
@@ -43,6 +43,8 @@ def results(lat,lng,distance):
     runDist=float(distance)
     userLat=float(lat)
     userLng=float(lng)
+
+    timer = timewith('results page')
 
     # Get data from database
     db=mdb.connect(host="mysql.server",user="JoergFritz", \
@@ -67,11 +69,14 @@ def results(lat,lng,distance):
     for i in range(3):
         index_min = dist.argmin()
         closestCities.append(cityNames[index_min])
+        #closestCities.append('Palo Alto, CA')
         dist[index_min] = max(dist)
 
     # read in all candidate routes
     distLow = runDist*0.95
     distHigh = runDist*1.05
+
+    timer.checkpoint('find closest city')
 
     # initialize variables
     ascent={}
@@ -89,13 +94,17 @@ def results(lat,lng,distance):
         proximity[row[0]]=1000*haversine((userLat,userLng),(float(row[4]),float(row[5])))
         #print proximity[row[0]]
 
+    timer.checkpoint('select tracks')
+
     # compute scoring functions
     ascent_z = scoring_functions.zscore(ascent)
     circularity_z = scoring_functions.zscore(circularity)
     nature_z = scoring_functions.zscore(nature)
     proximity_z = scoring_functions.zscore(proximity)
 
-    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,proximity_z)
+    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,proximity_z,4,0,4,4)
+
+    timer.checkpoint('compute scoring functions')
 
     # select n best routes
     bestRoutePoints={}
@@ -108,6 +117,27 @@ def results(lat,lng,distance):
             path.append(dict(id=result[0],lat=result[1],lng=result[2]))
         #print path
         bestRoutePoints[route_scores[i][0]]=path
+        if i==0:
+            path1=path
+        if i==1:
+            path2=path
+        if i==2:
+            path3=path
+
+    timer.checkpoint('select best routes')
+
+    # get info for n best routes
+    zip_codes = []
+    for i in range(3):
+        cursor.execute("SELECT MapMyRunId, Distance, Ascent, Circularity, Nature FROM Tracks WHERE MapMyRunId = %s ;", (route_scores[i][0]))
+        #print route_scores[i][0]
+        query_results=cursor.fetchall()
+        zip_codes.append(
+            {'zip':query_results[0][0],'city':query_results[0][1],'commute1_mins':query_results[0][2],
+            'commute2_mins': query_results[0][3], 'nature': query_results[0][4]}
+        )
+
+    timer.checkpoint('get info for best routes')
 
 # print bestRoutePoints
 
@@ -166,46 +196,44 @@ def results(lat,lng,distance):
 
     path1String=["SELECT MapMyRunId,Lat,Lng,Id FROM Points WHERE MapMyRunId=",str(bestFitId[0])," ORDER BY Id;"]
 
-    idNow=str(bestFitId[0])
-    # - Select Three best Paths
-    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
-    cursor.execute("SELECT MapMyRunId,Lat,lng, Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
-    #cursor.execute(''.join(path1String))
-    query_results=cursor.fetchall()
-    path1=[]
-    for result in query_results:
-        path1.append(dict(id=result[0],lat=result[1],lng=result[2]))
+#    idNow=str(bestFitId[0])
+#    # - Select Three best Paths
+#    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
+#    cursor.execute("SELECT MapMyRunId,Lat,lng, Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
+#    #cursor.execute(''.join(path1String))
+#    query_results=cursor.fetchall()
+#    path1=[]
+#    for result in query_results:
+#        path1.append(dict(id=result[0],lat=result[1],lng=result[2]))
 
-    idNow=str(bestFitId[1])
-    # - Select Three best Paths
-    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
-    cursor.execute("SELECT MapMyRunId,Lat,lng,Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
-    #cursor.execute(''.join(path1String))
-    query_results=cursor.fetchall()
-    path2=[]
-    for result in query_results:
-        path2.append(dict(id=result[0],lat=result[1],lng=result[2]))
+#    idNow=str(bestFitId[1])
+#    # - Select Three best Paths
+#    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
+#    cursor.execute("SELECT MapMyRunId,Lat,lng,Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
+#    #cursor.execute(''.join(path1String))
+#    query_results=cursor.fetchall()
+#    path2=[]
+#    for result in query_results:
+#        path2.append(dict(id=result[0],lat=result[1],lng=result[2]))
 
-    idNow=str(bestFitId[2])
-    # - Select Three best Paths
-    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
-    cursor.execute("SELECT MapMyRunId,Lat,lng,Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
-    #cursor.execute(''.join(path1String))
-    query_results=cursor.fetchall()
-    path3=[]
-    for result in query_results:
-        path3.append(dict(id=result[0],lat=result[1],lng=result[2]))
+#    idNow=str(bestFitId[2])
+#    # - Select Three best Paths
+#    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
+#    cursor.execute("SELECT MapMyRunId,Lat,lng,Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
+#    #cursor.execute(''.join(path1String))
+#    query_results=cursor.fetchall()
+#    path3=[]
+#    for result in query_results:
+#        path3.append(dict(id=result[0],lat=result[1],lng=result[2]))
 
     # make fake variables
 #    path1=[]
 #    path2=[]
 #    path3=[]
-    lat_test=[]
-    lng_test=[]
 #    idNow=[]
 
     # Make json object
-    zip_codes = []
+#    zip_codes = []
     #for i in range(0,222):
     for i in range(0,3):
         #zip = zip_scores[i][0]
@@ -217,15 +245,14 @@ def results(lat,lng,distance):
         #)
     return render_template("results.html",
         title = 'Results',
-        bestRoutePoints=bestRoutePoints,
         path1=path1,
         path2=path2,
         path3=path3,
-        idNow=idNow,
+        idNow=[],
+        userLat=userLat,
+        userLng=userLng,
         zip_codes = zip_codes,
         jsonstr = json.dumps(zip_codes),
-        lat_test=lat_test,
-        lng_test=lng_test,
         #tracksPoints=trackPoints;
         zip1_lng = zip1_lnglat[0],
         zip1_lat = zip1_lnglat[1],
