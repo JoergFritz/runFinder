@@ -10,7 +10,7 @@ import jinja2
 from haversine import haversine
 
 # User defined functions
-from forms import LoginForm
+from forms import LoginForm, ResultsForm
 from helpers import geocode, timewith
 import db_functions
 import scoring_functions
@@ -24,31 +24,60 @@ def login():
     if form.validate_on_submit():
         address = form.address.data
         distance = form.distance.data
-        weights = [1,1,1,1,1,1]
+        #weights = ["0","1","2","3","4","5"]
+        #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
+        pro = 1
+        pop = 2
+        nat = 3
+        asc = 4
+        off = 5
+        cir = 6
         print address, distance
         lat,lng,full_add,data = geocode(address)
-        return redirect(url_for('results',lat=lat,lng=lng,distance=distance,weights=weights))
+        return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
     return render_template('login.html', title = 'Run recommender', form = form)
 
 @app.route('/slideshow')
 def slideshow():
     return render_template('slideshow.html')
 
-@app.route('/results/<lat>_<lng>_<distance>_<weights>')
-def results(lat,lng,distance,weights):
+@app.route('/results/<lat>_<lng>_dist:<distance>_pr:<pro>_po:<pop>_na:<nat>_as:<asc>_of:<off>_ci:<cir>', methods = ['POST', 'GET'])
+def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
     # Map missing zip codes
     #zip1_orig = address
     #zip2_orig = distance
 
+    # ensure proper format of variables
     runDist=float(distance)
     userLat=float(lat)
     userLng=float(lng)
+    weightProximity=int(pro)
+    weightPopularity=int(pop)
+    weightNature=int(nat)
+    weightAscent=int(asc)
+    weightOffroad=int(off)
+    weightCircularity=int(cir)
+
+    form = ResultsForm()
+    if form.validate_on_submit():
+        address = form.address.data
+        #weights = ["0","1","2","3","4","5"]
+        #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
+        pro = 1
+        pop = 2
+        nat = 3
+        asc = 4
+        off = 5
+        cir = 6
+        print address, distance
+        lat,lng,full_add,data = geocode(address)
+        return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
 
     timer = timewith('results page')
 
     # Get data from database
     db=mdb.connect(host="mysql.server",user="JoergFritz", \
-            db="JoergFritz$runRoutesTest",passwd="you-wish")
+            db="JoergFritz$runTracks",passwd="you-wish")
     cursor=db.cursor()
 
     # find 3 closest cities to entered address
@@ -181,9 +210,9 @@ def results(lat,lng,distance,weights):
     latTest=[37.42565,37.42865]
     lngTest=[-122.13535,-122.13535]
     # - Select Three random paths
-    cursor.execute("SELECT MapMyRunId FROM Points ORDER BY RAND() LIMIT 3;")
+    #cursor.execute("SELECT MapMyRunId FROM Points ORDER BY RAND() LIMIT 3;")
     #cursor.execute("SELECT MapMyRunId FROM Points LIMIT 3;")
-    query_results=cursor.fetchall()
+    #query_results=cursor.fetchall()
     bestFitId=np.zeros(3)
     n=0
     for result in query_results:
@@ -248,6 +277,13 @@ def results(lat,lng,distance,weights):
         path1=path1,
         path2=path2,
         path3=path3,
+        weightProximity=weightProximity,
+        weightPopularity=weightPopularity,
+        weightNature=weightNature,
+        weightAscent=weightAscent,
+        weightOffroad=weightOffroad,
+        weightCircularity=weightCircularity,
+        form=form,
         idNow=[],
         userLat=userLat,
         userLng=userLng,

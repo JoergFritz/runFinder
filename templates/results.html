@@ -5,28 +5,34 @@
 	<div id="slider_header"> How important is each factor for you?</div>
 	<div class="sliderbox">
 		<div class ="label"> How close should the route be? </div>
-		<input id="slider_commute1" data-slider-tooltip="hide" value=8 data-slider-value=8>
+		<input id="slider_commute1" data-slider-tooltip="hide" value={{weightProximity}} data-slider-value={{weightProximity}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you like seeing other runners where you run? </div>
-		<input id="slider_commute2" data-slider-tooltip="hide" value=5 data-slider-value=5>
+		<input id="slider_commute2" data-slider-tooltip="hide" value={{weightPopularity}} data-slider-value={{weightPopularity}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you enjoy seeing nature on your run? </div>
-		<input id="slider_school" data-slider-tooltip="hide" value=5 data-slider-value=5>
+		<input id="slider_school" data-slider-tooltip="hide" value={{weightNature}} data-slider-value={{weightNature}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> How about hills? </div>
-		<input id="slider_crime" data-slider-tooltip="hide" value=2 data-slider-value=2>
+		<input id="slider_crime" data-slider-tooltip="hide" value={{weightAscent}} data-slider-value={{weightAscent}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you enjoy going off-road? </div>
-		<input id="slider_walk" data-slider-tooltip="hide" value=5 data-slider-value=5>
+		<input id="slider_walk" data-slider-tooltip="hide" value={{weightOffroad}} data-slider-value={{weightOffroad}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you mind seeing the same place twice? </div>
-		<input id="slider_price" data-slider-tooltip="hide" value=2 data-slider-value=2>
+		<input id="slider_price" data-slider-tooltip="hide" value={{weightCircularity}} data-slider-value={{weightCircularity}}>
 	</div>
+    <div class="sliderbox">
+	    <form action="" method="post" name="login" onsubmit="return validateform()">
+		    {{form.hidden_tag()}}
+		    <p><div id="submit_button"><input type="submit" value="Find my next run"></div>
+	    </form>
+    </div>
 
 	<div id="scroll_list">
 	{% for zip_code in zip_codes %}
@@ -130,7 +136,7 @@
             path1_coords.push(new google.maps.LatLng({{point['lat']}} ,{{point['lng']}}));
         {% endfor %}
 
-        console.log({{zip_codes[0]['zip']}})
+        console.log({{weightOffroad}})
 
         var drawPath1 = new google.maps.Polyline({
             path: path1_coords,
@@ -211,70 +217,7 @@
 		var score_new = [];
 		poly = [];
 		poly_map = [];
-		for (var i=0;i<222;i++)
-		{
-			zipc = zip_code_json[i].zip;
-			poly[zipc] = zip_code_json[i].polygon;
-			poly_map[zipc] = zip_code_json[i].map_poly;
-			commute_diff_wt = Math.min(commute1_wt,commute2_wt);
-			score = school_wt*zip_code_json[i].school_z-crime_wt*zip_code_json[i].crime_z+walk_wt*zip_code_json[i].walk_z-commute1_wt*zip_code_json[i].commute1_z-commute2_wt*zip_code_json[i].commute2_z-price_wt*zip_code_json[i].price_z-commute_diff_wt*Math.abs(zip_code_json[i].commute2_z-zip_code_json[i].commute1_z);
-			score_new.push([zipc,score]);
-		}
-		score_new.sort(function(a,b){ return b[1] - a[1];});
-		var quart1 = score_new[166][1];
-		var quart3 = score_new[55][1];
-		var outlier_low = quart1-1.5*(quart3-quart1);
-		var outlier_high = quart3+1.5*(quart3-quart1);
-		if (score_new[221][1] < outlier_low)
-		{
-			var min_score = outlier_low;
-		}
-		else
-		{
-			var min_score = score_new[221][1];
-		}
-		if (score_new[0][1] > outlier_high)
-		{
-			var max_score = outlier_high;
-		}
-		else
-		{
-			var max_score = score_new[0][1];
-		}
-		var score_range = max_score - min_score;
-		for (var j=0;j<222;j++)
-		{
-			zipc = score_new[j][0];
-			if (score_range != 0)
-			{
-				norm = (score_new[j][1]-min_score)/score_range;
-				document.getElementById(zipc).style.top=(j*73+4)+"px";
-				document.getElementById(zipc).style.display="block";
-			}
-			else
-			{
-				norm = 0.75;
-			}
-			poly_map[zipc].setOptions({
-				paths: google_maps_coords(poly[zipc]),
-				strokeColor: 'rgb(0,0,0)',
-				strokeOpacity: 0.5,
-				strokeWeight: 1,
-				fillColor: color_for_score(norm),
-				fillOpacity: 0.5
-			})
-		}
-		$('#scroll_list').animate({scrollTop:0})
-		zip_select_area.setOptions({
-			paths: google_maps_coords(poly[score_new[0][0]]),
-			strokeColor: 'rgb(0,0,0)',
-			strokeOpacity: 1,
-			strokeWeight: 5,
-			fillColor: 'rgb(0,0,255)',
-			fillOpacity: 0
-		})
-		map.panTo(new google.maps.LatLng(poly[old_selected][0][0][0],poly[old_selected][0][0][1]));
-		map.setZoom(10);
+
 	}
 
 	google.maps.event.addDomListener(window, 'load', initialize);

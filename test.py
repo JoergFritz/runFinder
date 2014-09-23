@@ -10,7 +10,7 @@ import scoring_functions
 timer = timewith('results page')
 
 db=mdb.connect(host="mysql.server",user="JoergFritz", \
-            db="JoergFritz$runRoutesTest",passwd="you-wish")
+            db="JoergFritz$runTracks",passwd="you-wish")
 cursor=db.cursor()
 
 # connect to apis
@@ -82,9 +82,10 @@ route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,prox
 
 timer.checkpoint('compute scoring functions')
 
-route = mmf.route.find(348949363)
+#route = mmf.route.find(536019642)
+#routes_paginator = mmf.route.search(route=348949363)
 #route = mmf.route.find(route_scores[i][0])
-print(route.name)  # '4 Mile Lunch Run'
+#print(route.name)  # '4 Mile Lunch Run'
 
 # select n best routes
 bestRoutePoints={}
@@ -118,6 +119,9 @@ for i in range(3):
     )
 
 timer.checkpoint('get info for best routes')
+
+weights=[1,1,1]
+print weights[0]
 
 #for zip_code in zip_codes:
     #print zip_code['zip']

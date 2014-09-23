@@ -14,7 +14,7 @@ html { height: 100% }
 	#map-canvas img {max-width: none}
 	#scroll_list {
 		position: absolute;
-		left: 0px; top: 285px;
+		left: 0px; top: 335px;
 		bottom: 0px; width: 400px;
 		overflow-y: scroll;
 		background-color:#f9f9f9;
