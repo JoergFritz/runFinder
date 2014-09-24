@@ -23,15 +23,17 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         address = form.address.data
-        distance = form.distance.data
+        distance = float(form.distance.data)
+        # change to SI units
+        distance = 1609.34*distance
         #weights = ["0","1","2","3","4","5"]
         #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
-        pro = 1
-        pop = 2
-        nat = 3
-        asc = 4
+        pro = 8
+        pop = 5
+        nat = 5
+        asc = 5
         off = 5
-        cir = 6
+        cir = 5
         print address, distance
         lat,lng,full_add,data = geocode(address)
         return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
@@ -60,24 +62,26 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
 
     form = ResultsForm()
     if form.validate_on_submit():
-        address = form.address.data
+        lat = form.userLat.data
+        #lat = '37.4038194'
+        lng = form.userLng.data
+        #lng = '-122.081267'
+        distance = form.runDist.data
+        pro = form.weightProximity.data
+        pop = form.weightPopularity.data
+        nat = form.weightNature.data
+        asc = form.weightAscent.data
+        off = form.weightOffroad.data
+        cir = form.weightCircularity.data
         #weights = ["0","1","2","3","4","5"]
         #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
-        pro = 1
-        pop = 2
-        nat = 3
-        asc = 4
-        off = 5
-        cir = 6
-        print address, distance
-        lat,lng,full_add,data = geocode(address)
         return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
 
     timer = timewith('results page')
 
     # Get data from database
     db=mdb.connect(host="mysql.server",user="JoergFritz", \
-            db="JoergFritz$runTracks",passwd="you-wish")
+            db="JoergFritz$runRoutesTest",passwd="you-wish")
     cursor=db.cursor()
 
     # find 3 closest cities to entered address
@@ -131,7 +135,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
     nature_z = scoring_functions.zscore(nature)
     proximity_z = scoring_functions.zscore(proximity)
 
-    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,proximity_z,4,0,4,4)
+    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,proximity_z,weightAscent,weightCircularity,weightNature,weightProximity)
 
     timer.checkpoint('compute scoring functions')
 
@@ -287,6 +291,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         idNow=[],
         userLat=userLat,
         userLng=userLng,
+        runDist=runDist,
         zip_codes = zip_codes,
         jsonstr = json.dumps(zip_codes),
         #tracksPoints=trackPoints;

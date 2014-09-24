@@ -5,30 +5,30 @@
 	<div id="slider_header"> How important is each factor for you?</div>
 	<div class="sliderbox">
 		<div class ="label"> How close should the route be? </div>
-		<input id="slider_commute1" data-slider-tooltip="hide" value={{weightProximity}} data-slider-value={{weightProximity}}>
+		<input id="slider_proximity" data-slider-tooltip="hide" value={{weightProximity}} data-slider-value={{weightProximity}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you like seeing other runners where you run? </div>
-		<input id="slider_commute2" data-slider-tooltip="hide" value={{weightPopularity}} data-slider-value={{weightPopularity}}>
+		<input id="slider_popularity" data-slider-tooltip="hide" value={{weightPopularity}} data-slider-value={{weightPopularity}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you enjoy seeing nature on your run? </div>
-		<input id="slider_school" data-slider-tooltip="hide" value={{weightNature}} data-slider-value={{weightNature}}>
+		<input id="slider_nature" data-slider-tooltip="hide" value={{weightNature}} data-slider-value={{weightNature}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> How about hills? </div>
-		<input id="slider_crime" data-slider-tooltip="hide" value={{weightAscent}} data-slider-value={{weightAscent}}>
+		<input id="slider_ascent" data-slider-tooltip="hide" value={{weightAscent}} data-slider-value={{weightAscent}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you enjoy going off-road? </div>
-		<input id="slider_walk" data-slider-tooltip="hide" value={{weightOffroad}} data-slider-value={{weightOffroad}}>
+		<input id="slider_offroad" data-slider-tooltip="hide" value={{weightOffroad}} data-slider-value={{weightOffroad}}>
 	</div>
 	<div class="sliderbox">
 		<div class ="label"> Do you mind seeing the same place twice? </div>
-		<input id="slider_price" data-slider-tooltip="hide" value={{weightCircularity}} data-slider-value={{weightCircularity}}>
+		<input id="slider_circularity" data-slider-tooltip="hide" value={{weightCircularity}} data-slider-value={{weightCircularity}}>
 	</div>
     <div class="sliderbox">
-	    <form action="" method="post" name="login" onsubmit="return validateform()">
+	    <form action="" method="post" name="results" onsubmit="return validateform()">
 		    {{form.hidden_tag()}}
 		    <p><div id="submit_button"><input type="submit" value="Find my next run"></div>
 	    </form>
@@ -122,6 +122,17 @@
         });
         layer.setMap(map);
 
+        <!-- initialize hidden form for feature selection feebback loop--!>
+        $('#weightProximity').val({{weightProximity}})
+        $('#weightPopularity').val({{weightPopularity}})
+        $('#weightNature').val({{weightNature}})
+        $('#weightAscent').val({{weightAscent}})
+        $('#weightOffroad').val({{weightOffroad}})
+        $('#weightCircularity').val({{weightCircularity}})
+        $('#userLat').val({{userLat}})
+        $('#userLng').val({{userLng}})
+        $('#runDist').val({{runDist}})
+
 
 		 var testCoordinates = [
             new google.maps.LatLng({{zip1_lat}}, {{zip1_lng}}),
@@ -141,7 +152,7 @@
         var drawPath1 = new google.maps.Polyline({
             path: path1_coords,
             geodesic: true,
-            strokeColor: '#0000FF',
+            strokeColor: '#FF0000',
             strokeOpacity: 1.0,
             strokeWeight: 2
         });
@@ -159,7 +170,7 @@
         var drawPath2 = new google.maps.Polyline({
             path: path2_coords,
             geodesic: true,
-            strokeColor: '#0066FF',
+            strokeColor: '#0000FF',
             strokeOpacity: 1.0,
             strokeWeight: 2
         });
@@ -177,7 +188,7 @@
         var drawPath3 = new google.maps.Polyline({
             path: path3_coords,
             geodesic: true,
-            strokeColor: '#5858FA',
+            strokeColor: '#008000',
             strokeOpacity: 1.0,
             strokeWeight: 2
         });
@@ -208,38 +219,46 @@
 		{
 			ev.target.value = ev.value;
 		}
-		var school_wt = $('#slider_school').val();
-		var crime_wt = $('#slider_crime').val();
-		var walk_wt = $('#slider_walk').val();
-		var commute1_wt = $('#slider_commute1').val();
-		var price_wt = $('#slider_price').val();
-		var commute2_wt = $('#slider_commute2').val();
+		var nature_wt = $('#slider_nature').val();
+		var ascent_wt = $('#slider_ascent').val();
+		var offroad_wt = $('#slider_offroad').val();
+		var proximity_wt = $('#slider_proximity').val();
+		var circularity_wt = $('#slider_circularity').val();
+		var popularity_wt = $('#slider_popularity').val();
 		var score_new = [];
 		poly = [];
 		poly_map = [];
+		$('#weightProximity').val(proximity_wt)
+		$('#weightPopularity').val(popularity_wt)
+		$('#weightNature').val(nature_wt)
+		$('#weightAscent').val(ascent_wt)
+		$('#weightOffroad').val(offroad_wt)
+		$('#weightCircularity').val(circularity_wt)
+
+		console.log($('#weightProximity').val());
 
 	}
 
 	google.maps.event.addDomListener(window, 'load', initialize);
 
-	$('#slider_school').slider().on('slideStop', function(ev){
-		recompute(ev);
-	})
-	$('#slider_crime').slider().on('slideStop', function(ev){
-		recompute(ev);
-	})
-	$('#slider_walk').slider().on('slideStop', function(ev){
-		recompute(ev);
-	})
-	$('#slider_commute1').slider().on('slideStop', function(ev){
-		recompute(ev);
-	})
-	$('#slider_price').slider().on('slideStop', function(ev){
-		recompute(ev);
-	})
-	$('#slider_commute2').slider().on('slideStop', function(ev){
-		recompute(ev);
-	})
+	$('#slider_nature').slider().on('slideStop', function(ev){
+        recompute(ev);
+    })
+	$('#slider_ascent').slider().on('slideStop', function(ev){
+        recompute(ev);
+    })
+	$('#slider_offroad').slider().on('slideStop', function(ev){
+        recompute(ev);
+    })
+	$('#slider_proximity').slider().on('slideStop', function(ev){
+        recompute(ev);
+    })
+	$('#slider_circularity').slider().on('slideStop', function(ev){
+        recompute(ev);
+    })
+	$('#slider_popularity').slider().on('slideStop', function(ev){
+        recompute(ev);
+    })
 </script>
 
 {% endblock %}
