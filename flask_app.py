@@ -30,10 +30,10 @@ def login():
         #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
         pro = 8
         pop = 5
-        nat = 5
+        nat = 2
         asc = 5
-        off = 5
-        cir = 5
+        off = 2
+        cir = 8
         print address, distance
         lat,lng,full_add,data = geocode(address)
         return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
@@ -106,8 +106,8 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         dist[index_min] = max(dist)
 
     # read in all candidate routes
-    distLow = runDist*0.95
-    distHigh = runDist*1.05
+    distLow = runDist*0.85
+    distHigh = runDist*1.15
 
     timer.checkpoint('find closest city')
 
