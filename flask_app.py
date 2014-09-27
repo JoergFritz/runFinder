@@ -6,6 +6,8 @@ import json
 import scipy.stats
 import jinja2
 from haversine import haversine
+import gpxpy
+import gpxpy.gpx
 
 # User defined functions
 from forms import LoginForm, ResultsForm
@@ -13,8 +15,10 @@ from helpers import geocode, timewith
 import db_functions
 import scoring_functions
 
+# basic configureation settings
 app = Flask(__name__)
 app.config.from_object('config')
+dbName = "JoergFritz$runRoutesTest"
 
 @app.route('/', methods = ['POST', 'GET'])
 def login():
@@ -76,7 +80,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
 
     # Get data from database
     db=mdb.connect(host="mysql.server",user="JoergFritz", \
-            db="JoergFritz$runRoutesTest",passwd="you-wish")
+            db=dbName,passwd="you-wish")
     cursor=db.cursor()
 
     # find 3 closest cities to entered address
@@ -298,6 +302,36 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
 # This route will prompt a file download with the csv lines
 @app.route('/download')
 def download():
+    downId = '37426726'
+
+    # Connect to database
+    dbDown=mdb.connect(host="mysql.server",user="JoergFritz", \
+            db=dbName,passwd="you-wish")
+    curDown=dbDown.cursor()
+
+    curDown.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (downId))
+    query_results=curDown.fetchall()
+    path=[]
+    for result in query_results:
+        path.append(dict(id=result[0],lat=result[1],lng=result[2]))
+
+    # setup gpx file
+    gpx = gpxpy.gpx.GPX()
+    # Create first track in our GPX:
+    gpx_track = gpxpy.gpx.GPXTrack()
+    gpx_track.name = 'test'
+    gpx.tracks.append(gpx_track)
+    gpx_segment = gpxpy.gpx.GPXTrackSegment()
+    gpx_track.segments.append(gpx_segment)
+
+    # write route points to gpx file
+    points_count = len(path)
+    points_range = range(points_count)
+    for point_num in points_range:
+        point = path[point_num]
+        gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(point['lat'], point['lng']))
+
+
     csv = """"REVIEW_DATE","AUTHOR","ISBN","DISCOUNTED_PRICE"
         "1985/01/21","Douglas Adams",0345391802,5.95
         "1990/01/12","Douglas Hofstadter",0465026567,9.95
@@ -306,8 +340,9 @@ def download():
         "2004/10/04","Randel Helms",0879755725,4.50"""
     # We need to modify the response, so the first thing we
     # need to do is create a response out of the CSV string
-    response = make_response(csv)
+    response = make_response(gpx.to_xml())
+    #response = gpx.to_xml()
     # This is the key: Set the right header for the response
     # to be downloaded, instead of just printed on the browser
-    response.headers["Content-Disposition"] = "attachment; filename=books.csv"
+    response.headers["Content-Disposition"] = "attachment; filename=route.gpx"
     return response
