@@ -1,6 +1,4 @@
-
-# A very simple Flask Hello World app for you to get started with...
-from flask import Flask, render_template, flash, redirect, url_for, request, jsonify
+from flask import Flask, render_template, flash, redirect, url_for, request, jsonify, make_response
 import MySQLdb as mdb
 import sys
 import numpy as np
@@ -45,9 +43,6 @@ def slideshow():
 
 @app.route('/results/<lat>_<lng>_dist:<distance>_pr:<pro>_po:<pop>_na:<nat>_as:<asc>_of:<off>_ci:<cir>', methods = ['POST', 'GET'])
 def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
-    # Map missing zip codes
-    #zip1_orig = address
-    #zip2_orig = distance
 
     # ensure proper format of variables
     runDist=float(distance)
@@ -299,3 +294,20 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         zip1_lat = zip1_lnglat[1],
         zip2_lng = zip2_lnglat[0],
         zip2_lat = zip2_lnglat[1])
+
+# This route will prompt a file download with the csv lines
+@app.route('/download')
+def download():
+    csv = """"REVIEW_DATE","AUTHOR","ISBN","DISCOUNTED_PRICE"
+        "1985/01/21","Douglas Adams",0345391802,5.95
+        "1990/01/12","Douglas Hofstadter",0465026567,9.95
+        "1998/07/15","Timothy ""The Parser"" Campbell",0968411304,18.99
+        "1999/12/03","Richard Friedman",0060630353,5.95
+        "2004/10/04","Randel Helms",0879755725,4.50"""
+    # We need to modify the response, so the first thing we
+    # need to do is create a response out of the CSV string
+    response = make_response(csv)
+    # This is the key: Set the right header for the response
+    # to be downloaded, instead of just printed on the browser
+    response.headers["Content-Disposition"] = "attachment; filename=books.csv"
+    return response
