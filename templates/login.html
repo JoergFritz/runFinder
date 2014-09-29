@@ -2,15 +2,16 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div id="googlemaps"></div>
 <div id="login_form">
 	<form action="" method="post" name="login" onsubmit="return validateform()">
 		{{form.hidden_tag()}}
 		Where do you want to run:<br>
-		{{form.address(size=40, placeholder="Palo Alto, CA")}}<br>
+		{{form.address(size=40, placeholder="260 Sheridan Ave, Palo Alto, CA")}}<br>
 		</p>
 		<p>
-		How long do you want to run (default is miles):<br>
-		{{form.distance(size=40, placeholder="e.g. 7k")}}</p>
+		How long do you want to run:<br>
+		{{form.distance(size=40, placeholder="e.g. 7k, 6 miles (default is miles)")}}</p>
 		<p><div id="submit_button"><input type="submit" value="Find my next run"></div>
 	</form>
 </div>
@@ -34,17 +35,98 @@
 	}
 </script>
 
+    <!-- Include the Google Maps API library - required for embedding maps -->
+<script src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+    <script type="text/javascript">
+
+     // The latitude and longitude of your business / place
+    var position = [37.523687, -122.542918];
+
+    function showGoogleMaps() {
+
+    var latLng = new google.maps.LatLng(position[0], position[1]);
+
+    // Create an array of styles. (hue was #00ffe6)
+    var styles = [
+        {
+            stylers: [
+                { hue: "#00ffe6" },
+                { saturation: -20 }
+            ]
+        },{
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [
+                { lightness: 100 },
+                { visibility: "simplified" }
+            ]
+        },{
+            featureType: "road",
+            elementType: "labels",
+            stylers: [
+                { visibility: "off" }
+            ]
+        },{
+            featureType: "water",
+            stylers: [
+                { hue: "#004cff" }
+            ]
+        }
+    ];
+
+
+    // Create a new StyledMapType object, passing it the array of styles,
+    // as well as the name to be displayed on the map type control.
+    var styledMap = new google.maps.StyledMapType(styles,
+    {name: "Styled Map"});
+
+
+    var mapOptions = {
+    zoom: 10, // initialize zoom level - the max value is 21
+    streetViewControl: false, // hide the yellow Street View pegman
+    scaleControl: true, // allow users to zoom the Google Map
+    center: latLng,
+    disableDefaultUI: true,
+    mapTypeControlOptions: {
+        mapTypeIds: [google.maps.MapTypeId.ROADMAP, 'map_style']
+        }
+    };
+
+    map = new google.maps.Map(document.getElementById('googlemaps'),
+    mapOptions);
+
+    //Associate the styled map with the MapTypeId and set it to display.
+    map.mapTypes.set('map_style', styledMap);
+    map.setMapTypeId('map_style');
+
+    var layer = new google.maps.FusionTablesLayer({
+            query: {
+                select: 'Location',
+                from: '1_3mKoYwBvMFngUb9nY5CX9i581DcDS2Gi5HszIkV'
+                },
+            heatmap: {
+                enabled: true
+            }
+        });
+    layer.setMap(map);
+
+    }
+
+    google.maps.event.addDomListener(window, 'load', showGoogleMaps);
+</script>
+
 <div id="explanation">
-	<h2>FindMyNextRun helps you discover running routes you might like.</h2>
-	<p>Simply enter a city in the Bay Area,
-	and FindMyNextRun will help you pick the best route
-	based on the importance you assign to the following factors:
-	<li>run distance</li>
+	<h2>RunFindr helps you discover running routes you like.</h2>
+	<p>Simply enter a city in the Bay Area (within the coverage area shown
+	on the heatmap to the right) and RunFindr will help you pick the best route
+	based on the importance you assign to the following factors:</p>
+	<ul><li>run distance</li>
 	<li>elevation profile</li>
 	<li>off-road or on-road running</li>
 	<li>how likely you are to meet other runners on the route</li>
 	<li>nature, how many trees and parks are along the route</li>
-	<li>safety</li>
-	</p>
+	<li>how much you mind running on a road segment twice during one run</li>
+	</ul>
 </div>
 {% endblock %}

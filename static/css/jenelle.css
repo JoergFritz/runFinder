@@ -45,7 +45,11 @@ html { height: 100% }
 		float: right;
 		margin-right: 16px
 	}
-	#title {font-family: 'Quicksand', cursive}
+	#title {
+	    font-family: 'Quicksand', cursive;
+	    color: #5674ca;
+	    margin-left: 50px;
+	}
 	#credits {
 		font-size: 16px;
 		color: #666
@@ -53,15 +57,17 @@ html { height: 100% }
 	#about {
 		font-size: 16px;
 		float: right;
-		color: #666
+		color: #666;
+		margin-right: 50px;
+		margin-top: 2px;
 	}
 	.slider-selection {
 		background-image: none !important;
 		background-color: #0e90d2 !important
 	}
 	#header {
-		background-color: #eee;
-		border-bottom: 1px solid #aaa;
+		background-color: #333;
+		border-bottom: 1px solid #333;
 		padding-top: 4px;
 		padding-left: 16px;
 		padding-right: 16px
@@ -76,23 +82,42 @@ html { height: 100% }
 		color: #888;
 		position: relative
 	}
+	#googlemaps {
+        height: 100%;
+        width: 100%;
+        position:absolute;
+        top: 35;
+        left: 0;
+        z-index: 0;
+    }
+    #googlemaps img {max-width: none}
 	#login_form {
-		margin-left: 50px;
+		margin-left: 30px;
 		margin-top: 30px;
-		background-color: white;
-		width: 240px;
+		background-color: black;
+		color: white;
+		width: 220px;
 		padding: 20px;
 		position: absolute;
+		z-index: 1; /* The z-index should be higher than Google Maps */
 		left: 30px;
 		box-shadow: 0px 2px 10px 1px #CCC;
-		border-radius: 4px
+		border-radius: 4px;
+		opacity: .7; /* Set the opacity for a slightly transparent Google Form */
 	}
 	#explanation {
-		width: 440px;
+		width: 500px;
 		position: absolute;
-		left: 450px;
-		top: 65px;
-		text-align: justify
+		z-index: 1; /* The z-index should be higher than Google Maps */
+		left: 60px;
+		top: 370px;
+		text-align: justify;
+		opacity: .7; /* Set the opacity for a slightly transparent Google Form */
+		background-color: black;
+		border-radius: 4px;
+		box-shadow: 0 2px 10px 1px #ccc;
+		color: white;
+		padding: 20px;
 	}
 	#explanation h2 {font-size: 19px;
 	    line-height: 25px}
@@ -121,7 +146,19 @@ html { height: 100% }
 		left: 218px
 	}
 
-	input[type=submit] {font-size:18px; padding:8px; margin-top:10px}
+	input[type=submit] {
+	    font-size:18px;
+	    padding:6px 40px;
+	    margin-top:10px;
+	    background-color: #2a4eb6;
+        border-color: #0e90d2;
+        border-radius: 4px;
+        color: #fff;
+        vertical-align: middle;
+	}
+	input[type=submit]:hover {
+        background-color: #0e90d2;
+	}
 	.slideshare-content {
 		width: 100%;
 		margin: 0px auto;
@@ -140,5 +177,6 @@ html { height: 100% }
 		top: 0;
 		left: 0;
 	}
-
 	.row {margin-left: 100px !important}
+	a {color:#666}
+	a:hover {color:#fff}
