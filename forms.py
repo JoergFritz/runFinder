@@ -1,10 +1,12 @@
 from flask.ext.wtf import Form
 from wtforms import TextField, BooleanField, SelectField, HiddenField
-from wtforms.validators import Required
+from wtforms.validators import Required, Regexp
+import re
 
 class LoginForm(Form):
-    address = TextField('city', validators = [Required()])
-    distance = TextField('distance', validators = [Required()])
+    address = TextField('address', validators = [Required()])
+    condition = re.compile('(\d)+( \w+)?')
+    distance = TextField('distance', validators = [Required(),Regexp(condition,message='Please reformat the distance you entered.')])
 
 class ResultsForm(Form):
     weightProximity = HiddenField(validators = [Required()])

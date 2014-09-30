@@ -36,3 +36,28 @@ class timewith():
     def __exit__(self, type, value, traceback):
         self.checkpoint('finished')
         pass
+
+def getDistanceMeters(input_string):
+    distList = input_string.split(' ')
+    numTerms = len(distList)
+    if numTerms==1:
+        distance = 1609.34*float(distList[0])
+    if numTerms==2:
+        unit = distList[1].lower()
+        if unit=='miles' or unit=='mile':
+            distance = 1609.34*float(distList[0])
+        elif unit=='k' or unit=='km' or unit=='kms':
+            distance = 1000.0*float(distList[0])
+        elif unit=='m':
+            if (distList[0])<100:
+                # the user probably meant miles
+                distance = 1609.34*float(distList[0])
+            else:
+                # the user meant meters
+                distance = float(distList[0])
+        elif unit=='meter' or unit=='meters' or unit=='metres':
+            distance = float(distList[0])
+        else:
+            # assume miles
+            distance = 1609.34*float(distList[0])
+    return distance

@@ -11,7 +11,7 @@ import gpxpy.gpx
 
 # User defined functions
 from forms import LoginForm, ResultsForm
-from helpers import geocode, timewith
+from helpers import geocode, timewith, getDistanceMeters
 import db_functions
 import scoring_functions
 
@@ -24,17 +24,18 @@ dbName = "JoergFritz$runRoutesTest"
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+    #if form.validate():
         address = form.address.data
-        distance = float(form.distance.data)
+        #distance = float(form.distance.data)
         # change to SI units
-        distance = 1609.34*distance
+        distance = getDistanceMeters(form.distance.data)
         #weights = ["0","1","2","3","4","5"]
         #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
         pro = 8
         pop = 5
-        nat = 2
+        nat = 5
         asc = 5
-        off = 2
+        off = 5
         cir = 8
         print address, distance
         lat,lng,full_add,data = geocode(address)

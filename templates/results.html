@@ -111,16 +111,16 @@
 		}
 		map = new google.maps.Map(document.getElementById("map-canvas"),mapOptions);
 
-		var layer = new google.maps.FusionTablesLayer({
-            query: {
-                select: 'Location',
-                from: '1nvCL3HND7Wa_xHutWikItL-RqT8ZKEtKPpwv6xlY'
-                },
-            heatmap: {
-                enabled: true
-            }
-        });
-        layer.setMap(map);
+		//var layer = new google.maps.FusionTablesLayer({
+        //    query: {
+        //        select: 'Location',
+        //        from: '1nvCL3HND7Wa_xHutWikItL-RqT8ZKEtKPpwv6xlY'
+        //        },
+        //    heatmap: {
+        //        enabled: true
+        //    }
+        //});
+        //layer.setMap(map);
 
         <!-- initialize hidden form for feature selection feebback loop--!>
         $('#weightProximity').val({{weightProximity}})
