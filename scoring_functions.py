@@ -12,11 +12,11 @@ def score_zips(crime_z,walk_z,school_z,housing_z,commute1_z,commute2_z):
 		i += 1
 	return zip_scores
 
-def routescore(ascent_z,circularity_z,nature_z,proximity_z,ascent_w,circularity_w,nature_w,proximity_w):
+def routescore(ascent_z,circularity_z,nature_z,proximity_z,popularity_z,offroad_z,overlap_z,ascent_w,circularity_w,nature_w,proximity_w,popularity_w,offroad_w,overlap_w):
 	score = {}
 	route_scores = {}
 	for route in ascent_z.keys():
-		score[route] = ascent_w*ascent_z[route]-circularity_w*circularity_z[route]+nature_w*nature_z[route]-proximity_w*proximity_z[route]
+		score[route] = ascent_w*ascent_z[route]+circularity_w*circularity_z[route]+nature_w*nature_z[route]-proximity_w*proximity_z[route]+popularity_z[route]*popularity_w+offroad_z[route]*offroad_w-overlap_z[route]*overlap_w
 	i = 0
 	for tuple in sorted(score.items(), key=lambda x:x[1], reverse = True):
 		route_scores[i] = tuple
@@ -40,6 +40,22 @@ def zscore(dict):
 		    zscore_final=3
 		if zscore_final<-3:
 		    zscore_final=-3
+		zscores[zip] = zscore_final
+	return zscores
+
+def zscoreDist(dict):
+	zscores = {}
+	scores_post = {}
+	mean = numpy.mean(dict.values())
+	std = numpy.std(dict.values())
+	for zip in dict.keys():
+		zscore = (dict[zip] - mean)/std
+		if abs(zscore) < 3:
+			scores_post[zip] = dict[zip]
+	mean_fix = numpy.mean(scores_post.values())
+	std_fix = numpy.std(scores_post.values())
+	for zip in dict.keys():
+		zscore_final = (dict[zip] - mean_fix)/std_fix
 		zscores[zip] = zscore_final
 	return zscores
 

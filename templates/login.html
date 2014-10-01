@@ -81,6 +81,7 @@
     map.mapTypes.set('map_style', styledMap);
     map.setMapTypeId('map_style');
 
+    // Show heatmap for currently available area
     var layer = new google.maps.FusionTablesLayer({
             query: {
                 select: 'Location',

@@ -116,16 +116,37 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
     circularity={}
     nature={}
     proximity={}
+    popularity={}
+    offroad={}
+    overlap={}
+    weightOverlap=0.2
 
-    cursor.execute("SELECT MapMyRunId, Ascent, Circularity, Nature, StartLat, \
-    StartLng FROM Tracks WHERE (City IN (%s,%s,%s)) AND (Distance BETWEEN %s AND %s)",(closestCities[0],closestCities[1],closestCities[2],distLow,distHigh))
+    cursor.execute("SELECT MapMyRunId, Ascent, Circularity, Nature, Popularity, Offroad, StartLat, \
+    StartLng, QuarterLat, QuarterLng, HalfLat, HalfLng, ThreeQuarterLat, \
+    ThreeQuarterLng FROM Tracks WHERE (City IN (%s,%s,%s)) AND (Distance BETWEEN %s AND %s)",(closestCities[0],closestCities[1],closestCities[2],distLow,distHigh))
     rowsTracks = cursor.fetchall()
     for row in rowsTracks:
         ascent[row[0]] = row[1]
         circularity[row[0]] = row[2]
         nature[row[0]] = row[3]
-        proximity[row[0]]=1000*haversine((userLat,userLng),(float(row[4]),float(row[5])))
+        popularity[row[0]] = row[4]
+        offroad[row[0]] = row[5]
+        startLat = float(row[6])
+        startLng = float(row[7])
+        quarterLat = float(row[8])
+        quarterLng = float(row[9])
+        halfLat = float(row[10])
+        halfLng = float(row[11])
+        threeQuarterLat = float(row[12])
+        threeQuarterLng = float(row[13])
+        distStart = haversine((userLat,userLng),(startLat,startLng))
+        distQuarter = haversine((userLat,userLng),(quarterLat,quarterLng))
+        distHalf = haversine((userLat,userLng),(halfLat,halfLng))
+        distThreeQuarter = haversine((userLat,userLng),(threeQuarterLat,threeQuarterLng))
+        dists = [distStart,distQuarter,distHalf,distThreeQuarter]
+        proximity[row[0]]=1000*min(dists)
         #print proximity[row[0]]
+        overlap[row[0]]=0.0
 
     timer.checkpoint('select tracks')
 
@@ -133,149 +154,144 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
     ascent_z = scoring_functions.zscore(ascent)
     circularity_z = scoring_functions.zscore(circularity)
     nature_z = scoring_functions.zscore(nature)
-    proximity_z = scoring_functions.zscore(proximity)
+    proximity_z = scoring_functions.zscoreDist(proximity)
+    popularity_z = scoring_functions.zscore(popularity)
+    offroad_z = scoring_functions.zscore(offroad)
+    overlap_z = scoring_functions.zscoreDist(overlap)
 
-    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,proximity_z,weightAscent,weightCircularity,weightNature,weightProximity)
+    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,
+        proximity_z,popularity_z,offroad_z,overlap_z,weightAscent,weightCircularity,
+        weightNature,weightProximity,weightPopularity,weightOffroad,weightOverlap*weightProximity)
 
     timer.checkpoint('compute scoring functions')
 
-    # select n best routes
-    bestRoutePoints={}
-    for i in range(3):
-        cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[i][0]))
-        #print route_scores[i][0]
-        query_results=cursor.fetchall()
-        path=[]
-        for result in query_results:
-            path.append(dict(id=result[0],lat=result[1],lng=result[2]))
-        #print path
-        bestRoutePoints[route_scores[i][0]]=path
-        if i==0:
-            path1=path
-        if i==1:
-            path2=path
-        if i==2:
-            path3=path
+#    # select n best routes
+#    bestRoutePoints={}
+#    for i in range(3):
+#        cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[i][0]))
+#        #print route_scores[i][0]
+#        query_results=cursor.fetchall()
+#        path=[]
+#        for result in query_results:
+#            path.append(dict(id=result[0],lat=result[1],lng=result[2]))
+#        #print path
+#        bestRoutePoints[route_scores[i][0]]=path
+#        if i==0:
+#            path1=path
+#        if i==1:
+#            path2=path
+#        if i==2:
+#            path3=path
+
+    # select best route
+    cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[0][0]))
+    query_results=cursor.fetchall()
+    path1=[]
+    for result in query_results:
+            path1.append(dict(id=result[0],lat=result[1],lng=result[2]))
+
+    # resort other routes to minimize overlap
+    cursor.execute("SELECT MapMyRunId, StartLat, StartLng, QuarterLat, QuarterLng, \
+        HalfLat,HalfLng, ThreeQuarterLat, ThreeQuarterLng FROM Tracks WHERE MapMyRunId = %s", (route_scores[0][0]))
+    query_results=cursor.fetchall()
+    startLatBest = float(query_results[0][1])
+    startLngBest = float(query_results[0][2])
+    quarterLatBest = float(query_results[0][3])
+    quarterLngBest = float(query_results[0][4])
+    halfLatBest = float(query_results[0][5])
+    halfLngBest = float(query_results[0][6])
+    threeQuarterLatBest = float(query_results[0][7])
+    threeQuarterLngBest = float(query_results[0][8])
+    for row in rowsTracks:
+        startLat = float(row[6])
+        startLng = float(row[7])
+        quarterLat = float(row[8])
+        quarterLng = float(row[9])
+        halfLat = float(row[10])
+        halfLng = float(row[11])
+        threeQuarterLat = float(row[12])
+        threeQuarterLng = float(row[13])
+        distStart = haversine((startLatBest,startLngBest),(startLat,startLng))
+        distQuarter = haversine((quarterLatBest,quarterLngBest),(quarterLat,quarterLng))
+        distHalf = haversine((halfLatBest,halfLngBest),(halfLat,halfLng))
+        distThreeQuarter = haversine((threeQuarterLatBest,threeQuarterLngBest),(threeQuarterLat,threeQuarterLng))
+        dists = [distStart,distQuarter,distHalf,distThreeQuarter]
+        if sum(dists)==0:
+            overlap[row[0]]=0
+        else:
+            overlap[row[0]]=1.0/sum(dists)
+
+    overlap_z = scoring_functions.zscoreDist(overlap)
+    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,
+        proximity_z,popularity_z,offroad_z,overlap_z,weightAscent,weightCircularity,
+        weightNature,weightProximity,weightPopularity,weightOffroad,weightOverlap*weightProximity)
+
+    # select 2nd best route
+    cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[1][0]))
+    query_results=cursor.fetchall()
+    path2=[]
+    for result in query_results:
+            path2.append(dict(id=result[0],lat=result[1],lng=result[2]))
+
+    # resort other routes to minimize overlap with first and 2nd route
+    cursor.execute("SELECT MapMyRunId, StartLat, StartLng, QuarterLat, QuarterLng, \
+        HalfLat,HalfLng, ThreeQuarterLat, ThreeQuarterLng FROM Tracks WHERE MapMyRunId = %s", (route_scores[1][0]))
+    query_results=cursor.fetchall()
+    startLatBest = float(query_results[0][1])
+    startLngBest = float(query_results[0][2])
+    quarterLatBest = float(query_results[0][3])
+    quarterLngBest = float(query_results[0][4])
+    halfLatBest = float(query_results[0][5])
+    halfLngBest = float(query_results[0][6])
+    threeQuarterLatBest = float(query_results[0][7])
+    threeQuarterLngBest = float(query_results[0][8])
+    for row in rowsTracks:
+        startLat = float(row[6])
+        startLng = float(row[7])
+        quarterLat = float(row[8])
+        quarterLng = float(row[9])
+        halfLat = float(row[10])
+        halfLng = float(row[11])
+        threeQuarterLat = float(row[12])
+        threeQuarterLng = float(row[13])
+        distStart = haversine((startLatBest,startLngBest),(startLat,startLng))
+        distQuarter = haversine((quarterLatBest,quarterLngBest),(quarterLat,quarterLng))
+        distHalf = haversine((halfLatBest,halfLngBest),(halfLat,halfLng))
+        distThreeQuarter = haversine((threeQuarterLatBest,threeQuarterLngBest),(threeQuarterLat,threeQuarterLng))
+        dists = [distStart,distQuarter,distHalf,distThreeQuarter]
+        if sum(dists)==0:
+            overlap[row[0]]=float(overlap[row[0]])+0
+        else:
+            overlap[row[0]]=float(overlap[row[0]])+1.0/sum(dists)
+
+    overlap_z = scoring_functions.zscoreDist(overlap)
+    route_scores = scoring_functions.routescore(ascent_z,circularity_z,nature_z,
+        proximity_z,popularity_z,offroad_z,overlap_z,weightAscent,weightCircularity,
+        weightNature,weightProximity,weightPopularity,weightOffroad,weightOverlap*weightProximity)
+
+    # select 2nd best route
+    cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[2][0]))
+    query_results=cursor.fetchall()
+    path3=[]
+    for result in query_results:
+            path3.append(dict(id=result[0],lat=result[1],lng=result[2]))
+
 
     timer.checkpoint('select best routes')
 
     # get info for n best routes
-    zip_codes = []
+    routes_data = []
     for i in range(3):
         cursor.execute("SELECT MapMyRunId, Distance, Ascent, Circularity, Nature FROM Tracks WHERE MapMyRunId = %s ;", (route_scores[i][0]))
         #print route_scores[i][0]
         query_results=cursor.fetchall()
-        zip_codes.append(
-            {'zip':query_results[0][0],'city':query_results[0][1],'commute1_mins':query_results[0][2],
-            'commute2_mins': query_results[0][3], 'nature': query_results[0][4]}
+        routes_data.append(
+            {'id':query_results[0][0],'distance':query_results[0][1],'ascent':query_results[0][2],
+            'circularity': query_results[0][3], 'nature': query_results[0][4]}
         )
 
     timer.checkpoint('get info for best routes')
 
-# print bestRoutePoints
-
-
-#    crime = db_functions.get_crime(cursor)
-#    walk = db_functions.get_walk(cursor)
-#    school = db_functions.get_school(cursor)
-#    sales = db_functions.get_sales(cursor)
-#    rent = db_functions.get_rent(cursor)
-#    city = db_functions.get_cities(cursor)
-    # Calculate z_scores
-#    crime_z = scoring_functions.zscore(crime)
-#    walk_z = scoring_functions.zscore(walk)
-#    school_z = scoring_functions.zscore(school)
-#    sales_z = scoring_functions.zscore(sales)
-#    rent_z = scoring_functions.zscore(rent)
-#    zip_scores = scoring_functions.score_zips(crime_z,walk_z,school_z,sales_z,crime_z,crime_z)
-    # Calculate percentiles
-#    score_pcntl = scoring_functions.percentile_score(zip_scores)
-#    school_pcntl = scoring_functions.percentile_high(school)
-#    walk_pcntl = scoring_functions.percentile_high(walk)
-#    crime_pcntl = scoring_functions.percentile_low(crime)
-#    safety = scoring_functions.calc_safety(crime)
-#    bestRoutesId=[478558214,22223,22224]
-    #lat_test = db_functions.get_lat(cursor)
-    #lng_test = db_functions.get_lng(cursor)
-#    cursor.execute("SELECT Lat,Lng FROM Points WHERE MapMyRunId=478558214 ORDER BY Id")
-#    rows = cursor.fetchall()
-#    lat_test = np.zeros(cursor.rowcount)
-#    lng_test = np.zeros(cursor.rowcount)
-#    trackPoints=[]
-#    n=0
-#    for row in rows:
-#        lat_test[n]=row[0]
-#        lng_test[n]=row[1]
-#        #trackPoints.append(dict('lat'=row[0], 'lng'=row[1]))
-#        n=n+1
-    # Calculate job coordinates
-    zip1_lnglat = [37.42565, 122.13535]
-    zip2_lnglat = [37.42365, 122.13735]
-    latTest=[37.42565,37.42865]
-    lngTest=[-122.13535,-122.13535]
-    # - Select Three random paths
-    #cursor.execute("SELECT MapMyRunId FROM Points ORDER BY RAND() LIMIT 3;")
-    #cursor.execute("SELECT MapMyRunId FROM Points LIMIT 3;")
-    #query_results=cursor.fetchall()
-    bestFitId=np.zeros(3)
-    n=0
-    for result in query_results:
-        bestFitId[n]=result[0]
-        n=n+1
-
-#    bestFitId[0]=362895605
-#    bestFitId[1]=53858614
-#    bestFitId[2]=46670374
-
-    path1String=["SELECT MapMyRunId,Lat,Lng,Id FROM Points WHERE MapMyRunId=",str(bestFitId[0])," ORDER BY Id;"]
-
-#    idNow=str(bestFitId[0])
-#    # - Select Three best Paths
-#    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
-#    cursor.execute("SELECT MapMyRunId,Lat,lng, Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
-#    #cursor.execute(''.join(path1String))
-#    query_results=cursor.fetchall()
-#    path1=[]
-#    for result in query_results:
-#        path1.append(dict(id=result[0],lat=result[1],lng=result[2]))
-
-#    idNow=str(bestFitId[1])
-#    # - Select Three best Paths
-#    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
-#    cursor.execute("SELECT MapMyRunId,Lat,lng,Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
-#    #cursor.execute(''.join(path1String))
-#    query_results=cursor.fetchall()
-#    path2=[]
-#    for result in query_results:
-#        path2.append(dict(id=result[0],lat=result[1],lng=result[2]))
-
-#    idNow=str(bestFitId[2])
-#    # - Select Three best Paths
-#    #cursor.execute("SELECT MapMyRunId,Lat,Lng FROM Points WHERE MapMyRunId=176365802.0 ORDER BY Id;")
-#    cursor.execute("SELECT MapMyRunId,Lat,lng,Id FROM Points WHERE MapMyRunId = %s ORDER BY Id", (idNow))
-#    #cursor.execute(''.join(path1String))
-#    query_results=cursor.fetchall()
-#    path3=[]
-#    for result in query_results:
-#        path3.append(dict(id=result[0],lat=result[1],lng=result[2]))
-
-    # make fake variables
-#    path1=[]
-#    path2=[]
-#    path3=[]
-#    idNow=[]
-
-    # Make json object
-#    zip_codes = []
-    #for i in range(0,222):
-    for i in range(0,3):
-        #zip = zip_scores[i][0]
-        #zip = bestRoutesId(i)
-        commute1_mins = int(20/60)
-        commute2_mins = int(20/60)
-        #zip_codes.append(
-        #    {'zip':result[0]}
-        #)
     return render_template("results.html",
         title = 'Results',
         path1=path1,
@@ -292,13 +308,8 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         userLat=userLat,
         userLng=userLng,
         runDist=runDist,
-        zip_codes = zip_codes,
-        jsonstr = json.dumps(zip_codes),
-        #tracksPoints=trackPoints;
-        zip1_lng = zip1_lnglat[0],
-        zip1_lat = zip1_lnglat[1],
-        zip2_lng = zip2_lnglat[0],
-        zip2_lat = zip2_lnglat[1])
+        routes_data = routes_data,
+        jsonstr = json.dumps(routes_data))
 
 # This route will prompt a file download with the csv lines
 @app.route('/download')

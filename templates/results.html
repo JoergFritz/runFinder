@@ -35,16 +35,16 @@
     </div>
 
 	<div id="scroll_list">
-	{% for zip_code in zip_codes %}
-		<div id="{{zip_code['zip']}}" class="result">
-			<div class="result_title"><b>ID: {{zip_code['zip']}}</b>, {{zip_code['city']}} meters</div>
+	{% for route in routes_data %}
+		<div id="{{route['id']}}" class="result">
+			<div class="result_title"><b>ID: {{route['id']}}</b>, {{route['distance']}} meters</div>
 			<div class="properties">
-				<span class="{{zip_code.commute1_pcntl}} commute1_text">Ascent: {{zip_code.commute1_mins}} m/km</span>
-				<span class="{{zip_code.school_pcntl}} schools_text"> {{zip_code.school}}</span>
-				<span class="{{zip_code.walk_pcntl}} walk_text"> {{zip_code.walk}}</span></br>
-				<span class="{{zip_code.commute2_pcntl}} commute2_text">Circularity Score: {{zip_code.commute2_mins}}</span>
-				<span class="{{zip_code.crime_pcntl}} crime_text"> {{zip_code.crime}}</span>
-				<span class="{{zip_code.price_pcntl}} price_text"> </span>
+				<span class="{{route.ascent}} commute1_text">Ascent: {{route.ascent}} m/km</span>
+				<span class="{{route.school_pcntl}} schools_text"> {{route.school}}</span>
+				<span class="{{route.walk_pcntl}} walk_text"> {{route.walk}}</span></br>
+				<span class="{{route.circularity}} commute2_text">Circularity Score: {{route.circularity}}</span>
+				<span class="{{route.crime_pcntl}} crime_text"> {{route.crime}}</span>
+				<span class="{{route.price_pcntl}} price_text"> </span>
 			</div>
 		</div>
 	{% endfor %}
@@ -134,12 +134,6 @@
         $('#runDist').val({{runDist}})
 
 
-		 var testCoordinates = [
-            new google.maps.LatLng({{zip1_lat}}, {{zip1_lng}}),
-            new google.maps.LatLng({{zip2_lat}}, {{zip2_lng}}),
-            new google.maps.LatLng(37.42664, -122.13535),
-            new google.maps.LatLng(37.42565, -122.13238)
-        ];
 
         var path1_coords = [];
 
@@ -196,19 +190,11 @@
         drawPath3.setMap(map);
 
 
-		var LatLngWork1 = new google.maps.LatLng({{zip1_lng}},{{zip1_lat}});
-		var LatLngWork2 = new google.maps.LatLng({{zip2_lng}},{{zip2_lat}});
-
 		var marker1 = new google.maps.Marker({
 			position: myLatLng,
 			map: map,
 			title:"Your Starting Location",
         });
-		var marker2 = new google.maps.Marker({
-			position: LatLngWork2,
-			map: map,
-			title:"Work2",
-		});
 
 		recompute();
 	}
