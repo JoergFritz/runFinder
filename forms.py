@@ -9,14 +9,17 @@ class LoginForm(Form):
     distance = TextField('distance', validators = [Required(),Regexp(condition,message='Please reformat the distance you entered.')])
 
 class ResultsForm(Form):
-    weightProximity = HiddenField(validators = [Required()])
-    weightPopularity = HiddenField(validators = [Required()])
-    weightNature = HiddenField(validators = [Required()])
-    weightAscent = HiddenField(validators = [Required()])
-    weightOffroad = HiddenField(validators = [Required()])
-    weightCircularity = HiddenField(validators = [Required()])
-    userLat = HiddenField(validators = [Required()])
-    userLng = HiddenField(validators = [Required()])
-    runDist = HiddenField(validators = [Required()])
+    weightProximity = HiddenField()
+    weightPopularity = HiddenField()
+    weightNature = HiddenField()
+    weightAscent = HiddenField()
+    weightOffroad = HiddenField()
+    weightCircularity = HiddenField()
+    userLat = HiddenField()
+    userLng = HiddenField()
+    runDist = HiddenField()
+
+class DownloadForm(Form):
+    downId = HiddenField(validators = [Required()])
 
 

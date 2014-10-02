@@ -27,24 +27,27 @@
 		<div class ="label"> Do you mind seeing the same place twice? </div>
 		<input id="slider_circularity" data-slider-tooltip="hide" value={{weightCircularity}} data-slider-value={{weightCircularity}}>
 	</div>
-    <div class="sliderbox">
-	    <form action="" method="post" name="results" onsubmit="return validateform()">
+    <div align="center">
+	    <form action="" method="post" name="results">
 		    {{form.hidden_tag()}}
-		    <p><div id="submit_button"><input type="submit" value="Find my next run"></div>
+		    <div id="submit_button"><input type="submit" value="Update Routes"></div>
 	    </form>
     </div>
 
 	<div id="scroll_list">
 	{% for route in routes_data %}
-		<div id="{{route['id']}}" class="result">
+		<div id="{{loop.index}}" class="result{{loop.index}}">
 			<div class="result_title"><b>ID: {{route['id']}}</b>, {{route['distance']}} meters</div>
 			<div class="properties">
 				<span class="{{route.ascent}} commute1_text">Ascent: {{route.ascent}} m/km</span>
-				<span class="{{route.school_pcntl}} schools_text"> {{route.school}}</span>
+				<span class="{{route.nature}} schools_text">Nature: {{route.nature}}</span>
 				<span class="{{route.walk_pcntl}} walk_text"> {{route.walk}}</span></br>
-				<span class="{{route.circularity}} commute2_text">Circularity Score: {{route.circularity}}</span>
-				<span class="{{route.crime_pcntl}} crime_text"> {{route.crime}}</span>
+				<span class="{{route.circularity}} commute2_text">Circularity: {{route.circularity}}</span>
+				<span class="{{route.popularity}} crime_text">Popularity {{route.popularity}}</span>
 				<span class="{{route.price_pcntl}} price_text"> </span>
+				<FORM METHOD="LINK" ACTION="http://joergfritz.pythonanywhere.com/download/{{route['id']}}">
+                    <INPUT TYPE="submit" VALUE="gpx" id="gpx">
+                </FORM>
 			</div>
 		</div>
 	{% endfor %}
@@ -111,16 +114,16 @@
 		}
 		map = new google.maps.Map(document.getElementById("map-canvas"),mapOptions);
 
-		//var layer = new google.maps.FusionTablesLayer({
-        //    query: {
-        //        select: 'Location',
-        //        from: '1nvCL3HND7Wa_xHutWikItL-RqT8ZKEtKPpwv6xlY'
-        //        },
-        //    heatmap: {
-        //        enabled: true
-        //    }
-        //});
-        //layer.setMap(map);
+		var layer = new google.maps.FusionTablesLayer({
+            query: {
+                select: 'Location',
+                from: '1nvCL3HND7Wa_xHutWikItL-RqT8ZKEtKPpwv6xlY'
+                },
+            heatmap: {
+                enabled: true
+            }
+        });
+        layer.setMap(map);
 
         <!-- initialize hidden form for feature selection feebback loop--!>
         $('#weightProximity').val({{weightProximity}})
@@ -132,8 +135,6 @@
         $('#userLat').val({{userLat}})
         $('#userLng').val({{userLng}})
         $('#runDist').val({{runDist}})
-
-
 
         var path1_coords = [];
 

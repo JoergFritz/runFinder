@@ -28,23 +28,64 @@ html { height: 100% }
 		width: 400px;
 		padding-left:8px
 	}
-	.result {
+	.result1 {
 		transition: top 1s ease;
-		position: absolute;
+		position: relative;
 		left: 8px;
 		box-shadow: 0px 1px 7px 2px #CCC;
-		width: 360px;
+		width: 345px;
 		cursor: pointer;
 		background-color: white;
-		padding: 4px
+		padding: 4px;
+		border-right: 20px solid #ff0000;
 	}
-	.result:hover {background-color: #ececec}
-	.result p {padding: 4px}
-	.result.selected {background-color: #C6C6C6 }
+	.result2 {
+		transition: top 1s ease;
+		position: relative;
+		left: 8px;
+		box-shadow: 0px 1px 7px 2px #CCC;
+		width: 345px;
+		cursor: pointer;
+		background-color: white;
+		padding: 4px;
+		border-right: 20px solid #0000ff;
+	}
+	.result3 {
+		transition: top 1s ease;
+		position: relative;
+		left: 8px;
+		box-shadow: 0px 1px 7px 2px #CCC;
+		width: 345px;
+		cursor: pointer;
+		background-color: white;
+		padding: 4px;
+		border-right: 20px solid #008000;
+	}
+	.result1:hover {background-color: #ececec}
+	.result2:hover {background-color: #ececec}
+	.result3:hover {background-color: #ececec}
+	.result1 p {padding: 4px}
+	.result2 p {padding: 4px}
+	.result3 p {padding: 4px}
+	.result1.selected {background-color: #C6C6C6 }
+	.result2.selected {background-color: #C6C6C6 }
+	.result3.selected {background-color: #C6C6C6 }
 	.sliderbox {
 		float: right;
 		margin-right: 16px
 	}
+	input[type=submit]#gpx {
+        color: #fff;
+        font-size: 5;
+        width: 40px;
+        height: 28px;
+        border: none;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+		left: 289px;
+		top: -18px;
+    }
 	#title {
 	    font-family: 'Quicksand', cursive;
 	    color: #5674ca;

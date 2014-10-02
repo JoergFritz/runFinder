@@ -10,7 +10,7 @@ import gpxpy
 import gpxpy.gpx
 
 # User defined functions
-from forms import LoginForm, ResultsForm
+from forms import LoginForm, ResultsForm, DownloadForm
 from helpers import geocode, timewith, getDistanceMeters
 import db_functions
 import scoring_functions
@@ -32,11 +32,11 @@ def login():
         #weights = ["0","1","2","3","4","5"]
         #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
         pro = 8
-        pop = 5
-        nat = 5
-        asc = 5
-        off = 5
-        cir = 8
+        pop = 2
+        nat = 2
+        asc = 2
+        off = 2
+        cir = 2
         print address, distance
         lat,lng,full_add,data = geocode(address)
         return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
@@ -61,6 +61,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
     weightCircularity=int(cir)
 
     form = ResultsForm()
+    #if form.validate_on_submit():
     if form.validate_on_submit():
         lat = form.userLat.data
         #lat = '37.4038194'
@@ -68,6 +69,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         #lng = '-122.081267'
         distance = form.runDist.data
         pro = form.weightProximity.data
+        #pro = 3
         pop = form.weightPopularity.data
         nat = form.weightNature.data
         asc = form.weightAscent.data
@@ -99,7 +101,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         dist[i] = haversine((float(cityLat),float(cityLng)),(userLat,userLng))
         #dist[i] = haversine((12.3,1.3),(12.4,1.2))
     # select three closest cities from the list
-    for i in range(3):
+    for i in range(5):
         index_min = dist.argmin()
         closestCities.append(cityNames[index_min])
         #closestCities.append('Palo Alto, CA')
@@ -184,6 +186,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
 #            path3=path
 
     # select best route
+    idBest = route_scores[0][0]
     cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[0][0]))
     query_results=cursor.fetchall()
     path1=[]
@@ -227,6 +230,7 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         weightNature,weightProximity,weightPopularity,weightOffroad,weightOverlap*weightProximity)
 
     # select 2nd best route
+    idSecond = route_scores[1][0]
     cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[1][0]))
     query_results=cursor.fetchall()
     path2=[]
@@ -269,7 +273,8 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         proximity_z,popularity_z,offroad_z,overlap_z,weightAscent,weightCircularity,
         weightNature,weightProximity,weightPopularity,weightOffroad,weightOverlap*weightProximity)
 
-    # select 2nd best route
+    # select 3rd best route
+    idThird = route_scores[2][0]
     cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[2][0]))
     query_results=cursor.fetchall()
     path3=[]
@@ -281,14 +286,27 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
 
     # get info for n best routes
     routes_data = []
+    bestRoutes=[idBest,idSecond,idThird]
     for i in range(3):
-        cursor.execute("SELECT MapMyRunId, Distance, Ascent, Circularity, Nature FROM Tracks WHERE MapMyRunId = %s ;", (route_scores[i][0]))
+        cursor.execute("SELECT MapMyRunId, Distance, Ascent, Circularity, Nature, Popularity, Offroad FROM Tracks WHERE MapMyRunId = %s ;", (bestRoutes[i]))
         #print route_scores[i][0]
         query_results=cursor.fetchall()
+        outDist=int(round(float(query_results[0][1]),0))
+        outAscent=round(float(query_results[0][2]),2)
+        outCircularity=round(float(query_results[0][3]),2)
+        outNature=round(float(query_results[0][4]),2)
+        outPopularity=round(float(query_results[0][5]),2)
+        outOffroad=round(float(query_results[0][6]),2)
         routes_data.append(
-            {'id':query_results[0][0],'distance':query_results[0][1],'ascent':query_results[0][2],
-            'circularity': query_results[0][3], 'nature': query_results[0][4]}
+            {'id':query_results[0][0],'distance':outDist,'ascent':outAscent,
+            'circularity': outCircularity, 'nature': outNature,
+            'popularity': outPopularity, 'offroad': outOffroad}
         )
+
+    #downloadForm = DownloadForm()
+    #if downloadForm.validate_on_submit():
+    #    downId = form.downId.data
+    #    return redirect(url_for('download'))
 
     timer.checkpoint('get info for best routes')
 
@@ -309,12 +327,13 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         userLng=userLng,
         runDist=runDist,
         routes_data = routes_data,
-        jsonstr = json.dumps(routes_data))
+        jsonstr = json.dumps(routes_data)
+        )
 
 # This route will prompt a file download with the csv lines
-@app.route('/download')
-def download():
-    downId = '37426726'
+@app.route('/download/<downId>', methods = ['POST', 'GET'])
+def download(downId):
+    #downId = id
 
     # Connect to database
     dbDown=mdb.connect(host="mysql.server",user="JoergFritz", \
@@ -343,13 +362,6 @@ def download():
         point = path[point_num]
         gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(point['lat'], point['lng']))
 
-
-    csv = """"REVIEW_DATE","AUTHOR","ISBN","DISCOUNTED_PRICE"
-        "1985/01/21","Douglas Adams",0345391802,5.95
-        "1990/01/12","Douglas Hofstadter",0465026567,9.95
-        "1998/07/15","Timothy ""The Parser"" Campbell",0968411304,18.99
-        "1999/12/03","Richard Friedman",0060630353,5.95
-        "2004/10/04","Randel Helms",0879755725,4.50"""
     # We need to modify the response, so the first thing we
     # need to do is create a response out of the CSV string
     response = make_response(gpx.to_xml())
