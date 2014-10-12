@@ -326,6 +326,9 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         userLat=userLat,
         userLng=userLng,
         runDist=runDist,
+        closestCity=closestCities[0],
+        secondCity=closestCities[1],
+        thirdCity=closestCities[2],
         routes_data = routes_data,
         jsonstr = json.dumps(routes_data)
         )
