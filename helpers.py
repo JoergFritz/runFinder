@@ -61,3 +61,12 @@ def getDistanceMeters(input_string):
             # assume miles
             distance = 1609.34*float(distList[0])
     return distance
+
+def initializeWeights():
+        pro = 8
+        pop = 2
+        nat = 2
+        asc = 2
+        off = 2
+        cir = 2
+        return pro,pop,nat,asc,off,cir

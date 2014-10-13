@@ -1,21 +1,18 @@
-from flask import Flask, render_template, flash, redirect, url_for, request, jsonify, make_response
+from flask import Flask, render_template, redirect, url_for, request, make_response
 import MySQLdb as mdb
-import sys
 import numpy as np
 import json
-import scipy.stats
 import jinja2
 from haversine import haversine
 import gpxpy
 import gpxpy.gpx
 
 # User defined functions
-from forms import LoginForm, ResultsForm, DownloadForm
-from helpers import geocode, timewith, getDistanceMeters
-import db_functions
+from forms import LoginForm, ResultsForm
+from helpers import geocode, timewith, getDistanceMeters, initializeWeights
 import scoring_functions
 
-# basic configureation settings
+# Basic configureation settings
 app = Flask(__name__)
 app.config.from_object('config')
 dbName = "JoergFritz$runRoutesTest"
@@ -24,21 +21,10 @@ dbName = "JoergFritz$runRoutesTest"
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-    #if form.validate():
         address = form.address.data
-        #distance = float(form.distance.data)
-        # change to SI units
         distance = getDistanceMeters(form.distance.data)
-        #weights = ["0","1","2","3","4","5"]
-        #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
-        pro = 8
-        pop = 2
-        nat = 2
-        asc = 2
-        off = 2
-        cir = 2
-        print address, distance
-        lat,lng,full_add,data = geocode(address)
+        pro,pop,nat,asc,off,cir = initializeWeights()
+        lat,lng,fullAdress,data = geocode(address)
         return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
     return render_template('login.html', title = 'Run recommender', form = form)
 
@@ -60,33 +46,28 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
     weightOffroad=int(off)
     weightCircularity=int(cir)
 
+    # Hidden from to allow passing of weights back to python
     form = ResultsForm()
-    #if form.validate_on_submit():
     if form.validate_on_submit():
         lat = form.userLat.data
-        #lat = '37.4038194'
         lng = form.userLng.data
-        #lng = '-122.081267'
         distance = form.runDist.data
         pro = form.weightProximity.data
-        #pro = 3
         pop = form.weightPopularity.data
         nat = form.weightNature.data
         asc = form.weightAscent.data
         off = form.weightOffroad.data
         cir = form.weightCircularity.data
-        #weights = ["0","1","2","3","4","5"]
-        #weights = {'pr': 1, 'po': 2, 'na': 3, 'as': 4, 'of': 5, 'ci': 6}
         return redirect(url_for('results',lat=lat,lng=lng,distance=distance,pro=pro,pop=pop,nat=nat,asc=asc,off=off,cir=cir))
 
     timer = timewith('results page')
 
-    # Get data from database
+    # Initialize database connection
     db=mdb.connect(host="mysql.server",user="JoergFritz", \
             db=dbName,passwd="you-wish")
     cursor=db.cursor()
 
-    # find 3 closest cities to entered address
+    # find 5 closest cities to entered address
     cursor.execute("SELECT City,Lat,Lng from Cities")
     rowsCities = cursor.fetchall()
     dist = np.zeros(len(rowsCities))
@@ -97,14 +78,11 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         cityNames.append(rowsCities[i][0])
         cityLat = rowsCities[i][1]
         cityLng = rowsCities[i][2]
-        #dist[i] = haversine((cityLat,cityLng),(lat,lng))
         dist[i] = haversine((float(cityLat),float(cityLng)),(userLat,userLng))
-        #dist[i] = haversine((12.3,1.3),(12.4,1.2))
     # select three closest cities from the list
     for i in range(5):
         index_min = dist.argmin()
         closestCities.append(cityNames[index_min])
-        #closestCities.append('Palo Alto, CA')
         dist[index_min] = max(dist)
 
     # read in all candidate routes
@@ -166,24 +144,6 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         weightNature,weightProximity,weightPopularity,weightOffroad,weightOverlap*weightProximity)
 
     timer.checkpoint('compute scoring functions')
-
-#    # select n best routes
-#    bestRoutePoints={}
-#    for i in range(3):
-#        cursor.execute("SELECT MapMyRunId, Lat, Lng FROM Points WHERE MapMyRunId = %s", (route_scores[i][0]))
-#        #print route_scores[i][0]
-#        query_results=cursor.fetchall()
-#        path=[]
-#        for result in query_results:
-#            path.append(dict(id=result[0],lat=result[1],lng=result[2]))
-#        #print path
-#        bestRoutePoints[route_scores[i][0]]=path
-#        if i==0:
-#            path1=path
-#        if i==1:
-#            path2=path
-#        if i==2:
-#            path3=path
 
     # select best route
     idBest = route_scores[0][0]
@@ -303,11 +263,6 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
             'popularity': outPopularity, 'offroad': outOffroad}
         )
 
-    #downloadForm = DownloadForm()
-    #if downloadForm.validate_on_submit():
-    #    downId = form.downId.data
-    #    return redirect(url_for('download'))
-
     timer.checkpoint('get info for best routes')
 
     return render_template("results.html",
@@ -322,7 +277,6 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         weightOffroad=weightOffroad,
         weightCircularity=weightCircularity,
         form=form,
-        idNow=[],
         userLat=userLat,
         userLng=userLng,
         runDist=runDist,
@@ -333,12 +287,11 @@ def results(lat,lng,distance,pro,pop,nat,asc,off,cir):
         jsonstr = json.dumps(routes_data)
         )
 
-# This route will prompt a file download with the csv lines
+# This route will allow download of routes as gpx files
 @app.route('/download/<downId>', methods = ['POST', 'GET'])
 def download(downId):
-    #downId = id
 
-    # Connect to database
+    # connect to database
     dbDown=mdb.connect(host="mysql.server",user="JoergFritz", \
             db=dbName,passwd="you-wish")
     curDown=dbDown.cursor()
@@ -351,7 +304,8 @@ def download(downId):
 
     # setup gpx file
     gpx = gpxpy.gpx.GPX()
-    # Create first track in our GPX:
+
+    # create first track in our GPX:
     gpx_track = gpxpy.gpx.GPXTrack()
     gpx_track.name = 'test'
     gpx.tracks.append(gpx_track)
@@ -365,11 +319,7 @@ def download(downId):
         point = path[point_num]
         gpx_segment.points.append(gpxpy.gpx.GPXTrackPoint(point['lat'], point['lng']))
 
-    # We need to modify the response, so the first thing we
-    # need to do is create a response out of the CSV string
+    # gpx is essentially xml format, so form proper response
     response = make_response(gpx.to_xml())
-    #response = gpx.to_xml()
-    # This is the key: Set the right header for the response
-    # to be downloaded, instead of just printed on the browser
     response.headers["Content-Disposition"] = "attachment; filename=route.gpx"
     return response

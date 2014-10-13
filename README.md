@@ -4,18 +4,17 @@ Source code for [runFindr.net](http://www.runfindr.net/) an Insight Data Science
 
 ## Status
 
-This is a work in progress. Current features implemented:
-
+This is a work in progress.
 
 ## Dependencies
 
 * Python 2.7
-** [Flask](http://flask.pocoo.org/) the frame work the website is built on.
-** [MySQLdb](http://mysql-python.sourceforge.net/MySQLdb.html) so we can talk to mySQL databases.
-** [gpxpy](https://github.com/tkrajina/gpxpy) for export of routes to gpx files.
-** [scipy.stats](http://docs.scipy.org/doc/scipy-0.13.0/reference/stats.html) for statistics
-** [numpy](http://www.numpy.org/) for faster scientific computing.
-** [Haversine](https://pypi.python.org/pypi/haversine) because we want to calculate distances properly.
+  * [Flask](http://flask.pocoo.org/) the frame work the website is built on.
+  * [MySQLdb](http://mysql-python.sourceforge.net/MySQLdb.html) so we can talk to mySQL databases.
+  * [gpxpy](https://github.com/tkrajina/gpxpy) for export of routes to gpx files.
+  * [scipy.stats](http://docs.scipy.org/doc/scipy-0.13.0/reference/stats.html) for statistics
+  * [numpy](http://www.numpy.org/) for faster scientific computing.
+  * [Haversine](https://pypi.python.org/pypi/haversine) because we want to calculate distances properly.
 
 ## Usage
 
