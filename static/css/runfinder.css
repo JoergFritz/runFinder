@@ -1,0 +1,223 @@
+html { height: 100% }
+	body {
+		height: 100%;
+		margin: 0;
+		padding: 0
+	}
+	#map-canvas {
+		position: absolute;
+		left: 400px;
+		right: 0px;
+		top:54px;
+		bottom: 0px
+	}
+	#map-canvas img {max-width: none}
+	#scroll_list {
+		position: absolute;
+		left: 0px; top: 335px;
+		bottom: 0px; width: 400px;
+		overflow-y: scroll;
+		background-color:#f9f9f9;
+		border-top: 1px solid #aaa
+	}
+	#left_side {
+		position: absolute;
+		left: 0px;
+		top: 60px;
+		bottom: 0px;
+		width: 400px;
+		padding-left:8px
+	}
+	.result1 {
+		transition: top 1s ease;
+		position: relative;
+		left: 8px;
+		box-shadow: 0px 1px 7px 2px #CCC;
+		width: 345px;
+		cursor: pointer;
+		background-color: white;
+		padding: 4px;
+		border-right: 20px solid #ff0000;
+	}
+	.result2 {
+		transition: top 1s ease;
+		position: relative;
+		left: 8px;
+		box-shadow: 0px 1px 7px 2px #CCC;
+		width: 345px;
+		cursor: pointer;
+		background-color: white;
+		padding: 4px;
+		border-right: 20px solid #0000ff;
+	}
+	.result3 {
+		transition: top 1s ease;
+		position: relative;
+		left: 8px;
+		box-shadow: 0px 1px 7px 2px #CCC;
+		width: 345px;
+		cursor: pointer;
+		background-color: white;
+		padding: 4px;
+		border-right: 20px solid #008000;
+	}
+	.result1:hover {background-color: #ececec}
+	.result2:hover {background-color: #ececec}
+	.result3:hover {background-color: #ececec}
+	.result1 p {padding: 4px}
+	.result2 p {padding: 4px}
+	.result3 p {padding: 4px}
+	.result1.selected {background-color: #C6C6C6 }
+	.result2.selected {background-color: #C6C6C6 }
+	.result3.selected {background-color: #C6C6C6 }
+	.sliderbox {
+		float: right;
+		margin-right: 16px
+	}
+	input[type=submit]#gpx {
+        color: #fff;
+        font-size: 5;
+        width: 40px;
+        height: 28px;
+        border: none;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+		left: 289px;
+		top: -18px;
+    }
+	#title {
+	    font-family: 'Quicksand', cursive;
+	    color: #5674ca;
+	    margin-left: 50px;
+	}
+	#credits {
+		font-size: 16px;
+		color: #666
+	}
+	#about {
+		font-size: 16px;
+		float: right;
+		color: #666;
+		margin-right: 50px;
+		margin-top: 2px;
+	}
+	.slider-selection {
+		background-image: none !important;
+		background-color: #0e90d2 !important
+	}
+	#header {
+		background-color: #333;
+		border-bottom: 1px solid #333;
+		padding-top: 4px;
+		padding-left: 16px;
+		padding-right: 16px
+	}
+	#slider_header {margin-bottom: 4px}
+	.high {color: green}
+	.medium {color: rgb(255,127,80)}
+	.low {color: rgb(200,0,0)}
+	.properties {
+		font-size: 13px;
+		line-height: 18px;
+		color: #888;
+		position: relative
+	}
+	#googlemaps {
+        height: 100%;
+        width: 100%;
+        position:absolute;
+        top: 35;
+        left: 0;
+        z-index: 0;
+    }
+    #googlemaps img {max-width: none}
+	#login_form {
+		margin-left: 30px;
+		margin-top: 30px;
+		background-color: black;
+		color: white;
+		width: 220px;
+		padding: 20px;
+		position: absolute;
+		z-index: 1; /* The z-index should be higher than Google Maps */
+		left: 30px;
+		box-shadow: 0px 2px 10px 1px #CCC;
+		border-radius: 4px;
+		opacity: .7; /* Set the opacity for a slightly transparent Google Form */
+	}
+	#explanation {
+		width: 500px;
+		position: absolute;
+		z-index: 1; /* The z-index should be higher than Google Maps */
+		left: 60px;
+		top: 370px;
+		text-align: justify;
+		opacity: .7; /* Set the opacity for a slightly transparent Google Form */
+		background-color: black;
+		border-radius: 4px;
+		box-shadow: 0 2px 10px 1px #ccc;
+		color: white;
+		padding: 20px;
+	}
+	#explanation h2 {font-size: 19px;
+	    line-height: 25px}
+	.slider-handle {opacity: 1 !important}
+	.sliderbox .slider {
+		width: 320px !important;
+		margin-right: 10px;
+		margin-left: 10px
+	}
+	h1 {margin: 0px !important}
+
+	.schools_text {
+		position: absolute;
+		left: 129px
+	}
+	.crime_text {
+		position: absolute;
+		left: 129px
+	}
+	.walk_text {
+		position: absolute;
+		left: 218px
+	}
+	.price_text {
+		position: absolute;
+		left: 218px
+	}
+
+	input[type=submit] {
+	    font-size:18px;
+	    padding:6px 40px;
+	    margin-top:10px;
+	    background-color: #2a4eb6;
+        border-color: #0e90d2;
+        border-radius: 4px;
+        color: #fff;
+        vertical-align: middle;
+	}
+	input[type=submit]:hover {
+        background-color: #0e90d2;
+	}
+	.slideshare-content {
+		width: 100%;
+		margin: 0px auto;
+	}
+	.slideshare-embed-container {
+		height: 0;
+		width: 100%;
+		padding-bottom: 83.37%;
+		overflow: hidden;
+		position: relative;
+	}
+	.slideshare-embed-container iframe {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		top: 0;
+		left: 0;
+	}
+	.row {margin-left: 100px !important}
+	a {color:#666}
+	a:hover {color:#fff}
